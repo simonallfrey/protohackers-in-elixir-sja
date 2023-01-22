@@ -48,7 +48,7 @@ https://christopherjmcclellan.wordpress.com/2018/06/02/how-to-change-elixir-log-
 
 `sed '/pattern1/s/pattern2/replacement/g'` replaces all occurrences of `pattern2` with `replacement` on lines matching `pattern1`
 
-To have newline (\n) and other escape characters in bash strings, we can use $'string' syntax (ANSI-C Quoting). $'string' expands to string, with backslash-escaped characters replaced as specified by the ANSI C standard. 
+To have newline (\n) and other escape characters in bash strings, we can use `$'string'` syntax (ANSI-C Quoting). `$'string'` expands to string, with backslash-escaped characters replaced as specified by the ANSI C standard. 
 
 So rather than zsh's `echo "foo\nbar"` we use `echo $'foo\nbar' | nc -N localhost 5002`
 
