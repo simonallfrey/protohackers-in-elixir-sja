@@ -1,4 +1,4 @@
-defmodule Protohackers.EchoServer do
+defmodule Protohackers.PrimeServer do
   use GenServer
 
   require Logger
@@ -23,13 +23,14 @@ defmodule Protohackers.EchoServer do
       mode: :binary,
       active: false,       #everything is blocking and explicit
       reuseaddr: true,
-      exit_on_close: false #so we can keep writing on socket when client closes
+      exit_on_close: false, #so we can keep writing on socket when client closes
+      packet: :line
     ]
 
-    case :gen_tcp.listen(@echo_port, listen_options) do
+    case :gen_tcp.listen(@prime_port, listen_options) do
       {:ok, listen_socket} ->
         Logger.info("Running on #{node()}")
-        Logger.info("Starting echo server on port #{@echo_port}")
+        Logger.info("Starting prime server on port #{@prime_port}")
         state = %__MODULE__{listen_socket: listen_socket, supervisor: supervisor}
         {:ok, state, {:continue, :accept}}
 
@@ -54,10 +55,8 @@ defmodule Protohackers.EchoServer do
 
   defp handle_connection(socket) do
     Logger.debug("Handling connection")
-    case recv_until_closed(socket, _buffer="", _buffer_size = 0) do
-      {:ok, data} ->
-        Logger.debug("Sending")
-        :gen_tcp.send(socket, data)
+    case echo_lines_until_closed(socket) do
+      :ok -> :ok
       {:error, reason} ->
         Logger.error("Failed to receive data: #{inspect(reason)}")
     end
@@ -66,19 +65,19 @@ defmodule Protohackers.EchoServer do
   end
 
 
-  defp recv_until_closed(socket, buffer, buffer_size) do
-    r = :gen_tcp.recv(socket,0, @timeout)
-    Logger.debug("Received: #{inspect(r)}")
-    case r do
-      {:ok, data} when buffer_size + byte_size(data) > @limit ->
-        {:error, :buffer_overflow}
+  defp echo_lines_until_closed(socket) do
+    #with packet: :line recv all bytes means until newline
+    case :gen_tcp.recv(socket, 0, @timeout) do
       {:ok, data} ->
-        Logger.debug("data: #{data}")
-        recv_until_closed(socket, [buffer, data], buffer_size + byte_size(data))
+        # we have to replace the newline by hand, again as iodata
+        # packet: :line only affects receives
+        Logger.debug("Received data: #{inspect(data)}")
+        :gen_tcp.send(socket, [data, ?\n])
+        echo_lines_until_closed(socket)
       {:error, :closed} ->
-        Logger.debug("Receive closed")
-        {:ok, buffer}
-      {:error, reason} -> {:error, reason}
+        :ok
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 end
