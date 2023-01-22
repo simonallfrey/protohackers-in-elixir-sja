@@ -75,7 +75,7 @@ fly deploy
 
 ## prevent fly.io keeping credit/debit card on record.
 
-Sign up w/o card and buy \$25 credit (with credit or debit card, perhpas prepayed), there is no agreement to allow further billing.
+Sign up w/o card and buy \$25 credit (with credit or debit card, perhaps prepaid), there is no agreement to allow further billing.
 
 Dashboard -> Billing -> Manage Billing 
 
