@@ -24,12 +24,15 @@ defmodule Protohackers.PrimeServer do
       active: false,       #everything is blocking and explicit
       reuseaddr: true,
       exit_on_close: false, #so we can keep writing on socket when client closes
-      packet: :line
+      packet: :line,
+      buffer: @buffer_size
     ]
 
     case :gen_tcp.listen(@prime_port, listen_options) do
       {:ok, listen_socket} ->
+        dbg(:inet.getopts(listen_socket, [:buffer]))
         Logger.info("Running on #{node()}")
+        Logger.info("PID #{inspect(self())}")
         Logger.info("Starting prime server on port #{@prime_port}")
         state = %__MODULE__{listen_socket: listen_socket, supervisor: supervisor}
         {:ok, state, {:continue, :accept}}

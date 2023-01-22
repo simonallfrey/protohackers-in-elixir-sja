@@ -43,6 +43,16 @@ iex(foo@localhost)1> Logger.configure(level: :debug)
 
 https://christopherjmcclellan.wordpress.com/2018/06/02/how-to-change-elixir-log-levels-for-a-running-application/
 
+## Add pid to logger
+
+``` elixir
+# ./config/config.exs
+if config_env() == :dev do
+  config :logger, :console,
+    format: "$time $metadata[$level] $message\n",
+    metadata: [:pid]
+end
+```
 
 ## Some shell stuff
 
@@ -92,9 +102,11 @@ $ fly ips allocate-v4
 $ fly ips release 37.16.27.35 -a protohackers-in-elixir-sja
 ```
 
-## use projectile-replace 
+## (doom) emacs stuff
 
-to replace all occurrences in a project
+Use `projectile-replace` to replace all occurrences in a project
+
+M-up / M-down to drag line up and down (from drag-stuff package)
 
 
 ## Stop bluetooth audio static
