@@ -29,15 +29,15 @@ $ iex --sname bar --cookie c1 --remsh "foo@localhost"
 
 ## sed match
 
-sed '/pattern1/s/pattern2/replacement/g' replaces all occurrences of 'pattern2' with 'replacement' on lines matching pattern1
+`sed '/pattern1/s/pattern2/replacement/g'` replaces all occurrences of 'pattern2' with 'replacement' on lines matching pattern1
 
 ## prevent fly.io keeping credit/debit card on record.
 
-Sign up w/o card and buy \$25 credit, there is no agreement to allow further billing.
+Sign up w/o card and buy \$25 credit (with credit or debit card, perhpas prepayed), there is no agreement to allow further billing.
 
 Dashboard -> Billing -> Manage Billing 
 
-Show stripe has "No payment method"
+Shows stripe has "No payment method"
 
 
 Of course, this way you have to spend \$25...
