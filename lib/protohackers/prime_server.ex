@@ -19,18 +19,27 @@ defmodule Protohackers.PrimeServer do
 
     {:ok, supervisor} = Task.Supervisor.start_link(max_children: @max_children)
 
+
+
     listen_options = [
       mode: :binary,
-      active: false,       #everything is blocking and explicit
+      # everything is blocking and explicit
+      active: false,
       reuseaddr: true,
-      exit_on_close: false, #so we can keep writing on socket when client closes
+      #so we can keep writing on socket when client closes
+      exit_on_close: false,
+      # https://www.erlang.org/doc/man/inet.html#setopts-2
       packet: :line,
       buffer: @buffer_size
     ]
 
+    # dbg(Logger.)
+
     case :gen_tcp.listen(@prime_port, listen_options) do
       {:ok, listen_socket} ->
         dbg(:inet.getopts(listen_socket, [:buffer]))
+        #  [lib/protohackers/prime_server.ex:32: Protohackers.PrimeServer.init/1]
+        #  :inet.getopts(listen_socket, [:buffer]) #=> {:ok, [buffer: 1460]}
         Logger.info("Running on #{node()}")
         Logger.info("PID #{inspect(self())}")
         Logger.info("Starting prime server on port #{@prime_port}")

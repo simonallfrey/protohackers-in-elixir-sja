@@ -39,12 +39,20 @@ iex(foo@localhost)1> Logger.configure(level: :debug)
 :ok
 ```
 
+## Elixir dbg
+
+``` elixir
+
+[lib/protohackers/prime_server.ex:32: Protohackers.PrimeServer.init/1]
+:inet.getopts(listen_socket, [:buffer]) #=> {:ok, [buffer: 1460]}
+```
+
 ## Change logger level of running app
 
 https://christopherjmcclellan.wordpress.com/2018/06/02/how-to-change-elixir-log-levels-for-a-running-application/
 
-## Add pid to logger
-
+## Add pid to logger (for e.g. supervised child processes)
+  
 ``` elixir
 # ./config/config.exs
 if config_env() == :dev do
@@ -53,7 +61,26 @@ if config_env() == :dev do
     metadata: [:pid]
 end
 ```
+Or for finegrained control.
+``` elixir
+# ./config/config.exs
+if config_env() == :dev do
+    format: {MyConsoleLogger, :format},
+    metadata: [:pid]
+end
 
+# ./lib/protohackers/my_console_logger.ex
+defmodule MyConsoleLogger do
+  def format(level, message, {_date,time}=timestamp, metadata) do
+    # date = Logger.Formatter.format_date(date)
+    time = Logger.Formatter.format_time(time)
+    pid = :erlang.pid_to_list(metadata[:pid])
+    "#{time} #{pid} [#{level}] #{message}\n"
+  rescue
+    _ -> "could not format: #{inspect({timestamp,level, message, metadata})}"
+  end
+end
+```
 ## Some shell stuff
 
 `sed '/pattern1/s/pattern2/replacement/g'` replaces all occurrences of `pattern2` with `replacement` on lines matching `pattern1`

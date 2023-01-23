@@ -2,7 +2,8 @@ import Config
 
 if config_env() == :dev do
   config :logger, :console,
-    format: "$time $metadata[$level] $message\n",
+    format: {MyConsoleLogger, :format},
+    # format: "$time $metadata[$level] $message\n",
     metadata: [:pid]
 end
 
