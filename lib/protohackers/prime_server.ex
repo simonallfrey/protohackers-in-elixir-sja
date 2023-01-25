@@ -4,8 +4,6 @@ defmodule Protohackers.PrimeServer do
   require Logger
 
 
-  Logger.configure(level: :info)
-
   use Protohackers.Constants
 
   def start_link([]=_opts) do
@@ -37,7 +35,7 @@ defmodule Protohackers.PrimeServer do
 
     case :gen_tcp.listen(@prime_port, listen_options) do
       {:ok, listen_socket} ->
-        dbg(:inet.getopts(listen_socket, [:buffer]))
+        # dbg(:inet.getopts(listen_socket, [:buffer]))
         #  [lib/protohackers/prime_server.ex:32: Protohackers.PrimeServer.init/1]
         #  :inet.getopts(listen_socket, [:buffer]) #=> {:ok, [buffer: 1460]}
         Logger.info("Running on #{node()}")
@@ -81,15 +79,23 @@ defmodule Protohackers.PrimeServer do
     #with packet: :line recv all bytes means until newline
     case :gen_tcp.recv(socket, 0, @timeout) do
       {:ok, data} ->
-        # we have to replace the newline by hand, again as iodata
-        # packet: :line only affects receives
-        Logger.debug("Received data: #{inspect(data)}")
-        :gen_tcp.send(socket, [data, ?\n])
-        echo_lines_until_closed(socket)
+        case Jason.decode(data) do
+          {:ok, %{"method" => "isPrime","number" => number}} when is_number(number) ->
+            Logger.debug("Received valid request for number: #{number}")
+            response = %{"method" => "isPrime","prime" => true}
+            # we have to replace the newline by hand, again as iodata
+            # packet: :line only affects receives
+            :gen_tcp.send(socket, [Jason.encode!(response), ?\n])
+            echo_lines_until_closed(socket)
+          other ->
+            Logger.debug("Received invalid request: #{inspect(other)}")
+            Logger.debug("Responding with : malformed request")
+            :gen_tcp.send(socket, "malformed request\n")
+            {:error, :invalid_request}
+        end
       {:error, :closed} ->
         :ok
-      {:error, reason} ->
-        {:error, reason}
+      {:error, reason} -> {:error, reason}
     end
   end
 end

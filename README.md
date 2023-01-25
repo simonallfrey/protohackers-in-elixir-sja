@@ -1,6 +1,31 @@
 # Protohackers in Elixir
 
+## Day 1
+This is the second video of my "Protohackers" Elixir series. We're solving network challenges from https://protohackers.com.
+
+I’m deploying code using a free account on https://fly.io. The source code is on GitHub: https://github.com/whatyouhide/protoh...
+
+Some resources for the video:
+
+• "inet:setopts/2" documentation (for the "packet" option): https://www.erlang.org/doc/man/inet.h...
+• Deploying Elixir applications on Fly.io: https://fly.io/docs/elixir/getting-st...
+• Documentation for the Erlang gen_tcp module: https://www.erlang.org/doc/man/gen_tc...
+
+Other resources:
+
+• My website: https://andrealeopardi.com
+• Twitter: https://twitter.com/whatyouhide
+• Mastodon: https://mas.to/@whatyouhide
+• #Elixir's website: https://elixir-lang.org
+
+Music from Uppbeat (free for Creators!):
+[https://uppbeat.io/t/walz/name](https://uppbeat.io/t/walz/name)
+License code: WX2ISVMMX8I1FJMDThis is the first video of a series on solving some network programming challenges in Elixir ([https://elixir-lang.org](https://elixir-lang.org/)). The challenges are from [https://protohackers.com](https://protohackers.com/).
+
+
 https://www.youtube.com/watch?v=owz50_NYIZ8&t=266s
+
+## Day 0
 
 Protohackers in Elixir: day 0 - Setup and Smoke Test
 Andrea Leopardi
@@ -42,9 +67,10 @@ iex(foo@localhost)1> Logger.configure(level: :debug)
 ## Elixir dbg
 
 ``` elixir
+dbg(:inet.getopts(listen_socket, [:buffer]))
 
-[lib/protohackers/prime_server.ex:32: Protohackers.PrimeServer.init/1]
-:inet.getopts(listen_socket, [:buffer]) #=> {:ok, [buffer: 1460]}
+ [lib/protohackers/prime_server.ex:32: Protohackers.PrimeServer.init/1]
+ :inet.getopts(listen_socket, [:buffer]) #=> {:ok, [buffer: 1460]}
 ```
 
 ## Change logger level of running app
@@ -134,6 +160,10 @@ $ fly ips release 37.16.27.35 -a protohackers-in-elixir-sja
 Use `projectile-replace` to replace all occurrences in a project
 
 M-up / M-down to drag line up and down (from drag-stuff package)
+
+## Elixir mode indentation issues
+
+https://github.com/elixir-editors/emacs-elixir/issues/488
 
 
 ## Stop bluetooth audio static

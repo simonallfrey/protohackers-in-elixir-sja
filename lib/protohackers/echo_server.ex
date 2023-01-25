@@ -4,8 +4,6 @@ defmodule Protohackers.EchoServer do
   require Logger
 
 
-  Logger.configure(level: :info)
-
   use Protohackers.Constants
 
   def start_link([]=_opts) do
@@ -23,11 +21,15 @@ defmodule Protohackers.EchoServer do
       mode: :binary,
       active: false,       #everything is blocking and explicit
       reuseaddr: true,
-      exit_on_close: false #so we can keep writing on socket when client closes
+      exit_on_close: false, #so we can keep writing on socket when client closes
+      buffer: @buffer_size
     ]
 
     case :gen_tcp.listen(@echo_port, listen_options) do
       {:ok, listen_socket} ->
+        dbg(:inet.getopts(listen_socket, [:buffer]))
+        #  [lib/protohackers/prime_server.ex:32: Protohackers.PrimeServer.init/1]
+        #  :inet.getopts(listen_socket, [:buffer]) #=> {:ok, [buffer: 1460]}
         Logger.info("Running on #{node()}")
         Logger.info("Starting echo server on port #{@echo_port}")
         state = %__MODULE__{listen_socket: listen_socket, supervisor: supervisor}
@@ -70,7 +72,7 @@ defmodule Protohackers.EchoServer do
     r = :gen_tcp.recv(socket,0, @timeout)
     Logger.debug("Received: #{inspect(r)}")
     case r do
-      {:ok, data} when buffer_size + byte_size(data) > @limit ->
+      {:ok, data} when buffer_size + byte_size(data) > @buffer_size ->
         {:error, :buffer_overflow}
       {:ok, data} ->
         Logger.debug("data: #{data}")
