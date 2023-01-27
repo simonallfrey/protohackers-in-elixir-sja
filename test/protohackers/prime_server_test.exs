@@ -8,7 +8,12 @@ defmodule Protohackers.PrimeServerTest do
     :gen_tcp.send(socket, Jason.encode!(payload) <> "\n")
     assert {:ok, data} = :gen_tcp.recv(socket, 0, @prime_port)
     assert String.ends_with?(data, "\n")
-    assert Jason.decode!(data) == payload
+    assert Jason.decode!(data) == %{"method" => "isPrime", "prime" => true}
+    payload = %{method: "isPrime", number: 6}
+    :gen_tcp.send(socket, Jason.encode!(payload) <> "\n")
+    assert {:ok, data} = :gen_tcp.recv(socket, 0, @prime_port)
+    assert String.ends_with?(data, "\n")
+    assert Jason.decode!(data) == %{"method" => "isPrime", "prime" => false}
   end
 
   # test "echo_server has max buffer size" do

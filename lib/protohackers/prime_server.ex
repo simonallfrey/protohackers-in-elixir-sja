@@ -82,7 +82,7 @@ defmodule Protohackers.PrimeServer do
         case Jason.decode(data) do
           {:ok, %{"method" => "isPrime","number" => number}} when is_number(number) ->
             Logger.debug("Received valid request for number: #{number}")
-            response = %{"method" => "isPrime","prime" => true}
+            response = %{"method" => "isPrime","prime" => prime?(number)}
             # we have to replace the newline by hand, again as iodata
             # packet: :line only affects receives
             :gen_tcp.send(socket, [Jason.encode!(response), ?\n])
@@ -97,5 +97,14 @@ defmodule Protohackers.PrimeServer do
         :ok
       {:error, reason} -> {:error, reason}
     end
+  end
+
+  # https://rosettacode.org/wiki/Primality_by_trial_division#Elixir
+  defp prime?(number) when is_float(number), do: false
+  defp prime?(number) when number < 2 , do: false
+  # so we can use sqrt as upper bound
+  defp prime?(number) when number in [2,3], do: true
+  defp prime?(number) do
+    not Enum.any?(2..trunc(:math.sqrt(number)),&(rem(number, &1) == 0))
   end
 end

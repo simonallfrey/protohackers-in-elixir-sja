@@ -72,35 +72,81 @@ defmodule Protohackers.EchoServerTest do
     Enum.each(tasks, &Task.await/1)
   end
 
+  @tag timeout: :infinity
+  test "true buffer sizes" do
+    # for payload_size <- (1024*240)..(1024*241)//1 do
+    payload_size = 212992+1
+    payload = :binary.copy("8", payload_size)
+    for buffer_size <- 11152..412992//100 do
+      port_options = [
+      # inet_backend: :inet,
+      mode: :binary,
+      active: false,       #everything is blocking and explicit
+      reuseaddr: true,
+      exit_on_close: false, #so we can keep writing on socket when client closes
+      packet: :raw,
+      sndbuf: buffer_size,  # max from /proc/sys/net/core/wmem_max = 212992
+      recbuf: buffer_size,  # max from /proc/sys/net/core/rmem_max = 212992
+      buffer: payload_size,
+      ]
+      {:ok,ls} = :gen_tcp.listen(7000, port_options)
+      {:ok,cs} = :gen_tcp.connect(~c"localhost", 7000, port_options)
+      {:ok,ss} = :gen_tcp.accept(ls)
+      assert :gen_tcp.send(cs, payload) == :ok
+      :gen_tcp.shutdown(cs, :write)
+      {:ok, [recbuf: rb]} = :inet.getopts(ss, [:recbuf])
+      {:ok, received} = :gen_tcp.recv(ss, _length=0, @timeout)
+      bsr = byte_size(received)
+      # dbg({buffer_size,bsr,bsr/buffer_size})
+      IO.puts("#{div(rb,2)},#{bsr}")
+      :gen_tcp.recv(ss, payload_size-bsr, @timeout)
+      for s <- [ls,cs,ss], do: :gen_tcp.close(s)
+    end
+  end
+
   test "gen_tcp behaves as advertised" do
-    for payload_size <- (1024*99)..(1024*110)//1 do
-    # for payload_size <- 81381..81382//1 do
+    # for payload_size <- (1024*240)..(1024*241)//1 do
+    for payload_size <- 245790..245801//1 do
         port_options = [
+        inet_backend: :inet,
         mode: :binary,
         active: false,       #everything is blocking and explicit
         reuseaddr: true,
         exit_on_close: false, #so we can keep writing on socket when client closes
         packet: :raw,
-        recbuf: 1024*100,
-        buffer: 1024*100
+        sndbuf: 212980,  # max from /proc/sys/net/core/wmem_max
+        recbuf: 212980,  # max from /proc/sys/net/core/rmem_max
+        buffer: payload_size,
         ]
         {:ok,ls} = :gen_tcp.listen(7000, port_options)
         {:ok,cs} = :gen_tcp.connect(~c"localhost", 7000, port_options)
         {:ok,ss} = :gen_tcp.accept(ls)
-        # dbg(:inet.getopts(ss, [:buffer]))
+        # the next 2 max out at 0x68000 (425984)
+        # which is 2 x
+        # /proc/sys/net/core/{w,r}mem_max = 212992
+        # see: man tcp
+        # if not maxed they are 2x the vaule set in :gen_tcp.listen see:
+        # https://erlang.org/pipermail/erlang-questions/2011-August/060851.html
+        dbg(:inet.getopts(ss, [:recbuf]))
+        dbg(:inet.getopts(ss, [:sndbuf]))
+        dbg(payload_size)
+        dbg(:inet.getopts(ss, [:buffer]))
         dbg(:inet.getopts(ss, [:packet]))
+        # :timer.sleep(20_000)
         # following reports double the length of recbuf.
         {:ok, [recbuf: rb]} = :inet.getopts(ss, [:recbuf])
+        dbg(div(rb,2))
         # dbg(IEx.Info.info(rb))
         # dbg(inspect(rb))
-        dbg(rb/payload_size)
         payload = :binary.copy("8", payload_size)
+        dbg(byte_size(payload))
+        dbg(payload_size)
         # put payload in list to use iodata
-        assert :gen_tcp.send(cs, [payload]) == :ok
-        # assert :gen_tcp.send(cs, payload) == :ok
+        # assert :gen_tcp.send(cs, [payload]) == :ok
+        assert :gen_tcp.send(cs, payload) == :ok
         :gen_tcp.shutdown(cs, :write)
         # with _length = 0 we get at most recbuf bytes
-        # assert :gen_tcp.recv(ss, _length=0, @timeout) == {:ok, payload}
+        assert :gen_tcp.recv(ss, _length=0, @timeout) == {:ok, payload}
         # with _length specified we get that number of bytes (independent of recbuf)
         # assert :gen_tcp.recv(ss, _length = payload_size, @timeout) == {:ok, payload}
         # assert do_recv(ss,_buffer="") == {:ok, payload}

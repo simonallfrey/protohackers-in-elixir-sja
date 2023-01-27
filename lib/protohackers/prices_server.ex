@@ -1,8 +1,9 @@
-defmodule Protohackers.EchoServer do
+defmodule Protohackers.PricesServer do
   use GenServer
 
   require Logger
 
+  alias Protohackers.PricesServer.DB
 
   use Protohackers.Constants
 
@@ -25,13 +26,13 @@ defmodule Protohackers.EchoServer do
       buffer: @buffer_size
     ]
 
-    case :gen_tcp.listen(@echo_port, listen_options) do
+    case :gen_tcp.listen(@prices_port, listen_options) do
       {:ok, listen_socket} ->
         # dbg(:inet.getopts(listen_socket, [:buffer]))
         #  [lib/protohackers/prime_server.ex:32: Protohackers.PrimeServer.init/1]
         #  :inet.getopts(listen_socket, [:buffer]) #=> {:ok, [buffer: 1460]}
         Logger.info("Running on #{node()}")
-        Logger.info("Starting echo server on port #{@echo_port}")
+        Logger.info("Starting prices server on port #{@prices_port}")
         state = %__MODULE__{listen_socket: listen_socket, supervisor: supervisor}
         {:ok, state, {:continue, :accept}}
 
@@ -55,32 +56,52 @@ defmodule Protohackers.EchoServer do
   ## Helpers
 
   defp handle_connection(socket) do
-    Logger.debug("Handling connection")
-    case recv_until_closed(socket, _buffer="", _buffer_size = 0) do
-      {:ok, data} ->
-        Logger.debug("Sending")
-        :gen_tcp.send(socket, data)
-      {:error, reason} ->
-        Logger.error("Failed to receive data: #{inspect(reason)}")
+    case handle_requests(socket, DB.new()) do
+      :ok -> :ok
+      {:error, reason} -> Logger.error("Failed to receive data: #{inspect(reason)}")
     end
 
     :gen_tcp.close(socket)
   end
 
 
-  defp recv_until_closed(socket, buffer, buffer_size) do
-    r = :gen_tcp.recv(socket,0, @timeout)
-    Logger.debug("Received: #{inspect(r)}")
-    case r do
-      {:ok, data} when buffer_size + byte_size(data) > @buffer_size ->
-        {:error, :buffer_overflow}
-      {:ok, data} ->
-        Logger.debug("data: #{data}")
-        recv_until_closed(socket, [buffer, data], buffer_size + byte_size(data))
+  defp handle_requests(socket, db) do
+    case :gen_tcp.recv(socket, 9, @timeout) do
+      {:ok, data} when byte_size(data) == 9 ->
+        case handle_request(data,db) do
+          {nil, db} ->
+            handle_requests(socket, db)
+
+          {response,db} ->
+            :gen_tcp.send(socket,response)
+            handle_requests(socket, db)
+
+          :error ->
+            {:error,:invalid_request}
+        end
+
+      {:error, :timeout} ->
+        handle_requests(socket,db)
+
       {:error, :closed} ->
-        Logger.debug("Receive closed")
-        {:ok, buffer}
-      {:error, reason} -> {:error, reason}
+        :ok
+
+      {:error, reason} ->
+        {:error, reason}
     end
+  end
+
+
+  defp handle_request(<<?I, timestamp::32-signed-big, price::32-signed-big>>, db) do
+    {nil, DB.add(db,timestamp,price)}
+  end
+
+  defp handle_request(<<?Q, from::32-signed-big, to::32-signed-big>>, db) do
+    average = DB.query(db,from,to)
+    {<<average::32-signed-big>>, db}
+  end
+
+  defp handle_request(_other, _db) do
+    :error
   end
 end
