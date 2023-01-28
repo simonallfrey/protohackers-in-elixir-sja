@@ -77,7 +77,9 @@ defmodule Protohackers.EchoServerTest do
   @tag timeout: :infinity
   @tag disabled: true
   test "true buffer sizes" do
-    payload_size = 612992+1
+  # run this test with line number given
+  # mix test test/protohackers/echo_server_test.exs:79
+    payload_size = 10*612992+1
     payload = :binary.copy("8", payload_size)
     file = File.open!('recbuf.csv',[:write,:utf8])
     for buffer_size <- 1024..612992//100 do
@@ -97,6 +99,10 @@ defmodule Protohackers.EchoServerTest do
       assert :gen_tcp.send(cs, payload) == :ok
       :gen_tcp.shutdown(cs, :write)
       {:ok, [recbuf: rb]} = :inet.getopts(ss, [:recbuf])
+      # {:ok, _received} = :gen_tcp.recv(ss, _length=div(payload_size,10), @timeout)
+      # {:ok, _received} = :gen_tcp.recv(ss, _length=div(payload_size,10), @timeout)
+      # {:ok, _received} = :gen_tcp.recv(ss, _length=div(payload_size,10), @timeout)
+      # {:ok, _received} = :gen_tcp.recv(ss, _length=div(payload_size,10), @timeout)
       {:ok, received} = :gen_tcp.recv(ss, _length=0, @timeout)
       bsr = byte_size(received)
       # dbg({buffer_size,bsr,bsr/buffer_size})

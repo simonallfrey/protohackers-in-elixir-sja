@@ -208,6 +208,15 @@ big enough and we explictly request a number of bytes from recv there is no prob
 
 The above is just a feature of recv(socket,0,timeout)
 
+https://stackoverflow.com/questions/5081298/erlang-get-tcprecv-data-length
+
+n.b. kernel is not obliged to return a full buffer's worth of data.
+
+
+General notes on socket tcp buffering:
+
+https://www.ciscopress.com/articles/article.asp?p=769557&seqNum=2
+
 ## Some shell stuff
 
 `sed '/pattern1/s/pattern2/replacement/g'` replaces all occurrences of `pattern2` with `replacement` on lines matching `pattern1`
@@ -279,6 +288,12 @@ Now, following the instructions in Rustler's README.md edit `./lib/protohackers/
 to 'declare' the elixir functions you define in `./native/protohackers_hellorust/src/lib.rs`
 
 You can find an example `lib.rs` at https://github.com/rusterlium/NifIo/blob/master/native/io/src/lib.rs
+
+Using precompiled rust: https://github.com/philss/rustler_precompiled
+Encryption: https://til.codes/converting-encryption-code-from-elixir-to-rust-using-nif/
+(full of code typos)
+
+NIFs in zig: https://github.com/ityonemo/zigler
 
 https://www.doctave.com/blog/2021/08/19/using-rust-with-elixir-for-code-reuse-and-performance.html
 
