@@ -77,10 +77,10 @@ defmodule Protohackers.EchoServerTest do
   @tag timeout: :infinity
   @tag disabled: true
   test "true buffer sizes" do
-    # for payload_size <- (1024*240)..(1024*241)//1 do
-    payload_size = 212992+1
+    payload_size = 612992+1
     payload = :binary.copy("8", payload_size)
-    for buffer_size <- 11152..412992//100 do
+    file = File.open!('recbuf.csv',[:write,:utf8])
+    for buffer_size <- 1024..612992//100 do
       port_options = [
       # inet_backend: :inet,
       mode: :binary,
@@ -101,10 +101,11 @@ defmodule Protohackers.EchoServerTest do
       {:ok, received} = :gen_tcp.recv(ss, _length=0, @timeout)
       bsr = byte_size(received)
       # dbg({buffer_size,bsr,bsr/buffer_size})
-      IO.puts("#{div(rb,2)},#{bsr}")
+      IO.puts(file,"#{buffer_size},#{div(rb,2)},#{bsr}")
       :gen_tcp.recv(ss, payload_size-bsr, @timeout)
       for s <- [ls,cs,ss], do: :gen_tcp.close(s)
     end
+    File.close(file)
   end
 
   @tag disabled: true

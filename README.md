@@ -173,6 +173,40 @@ defmodule MyConsoleLogger do
   end
 end
 ```
+## `:gen_tcp.recv` and buffer sizes
+
+When in packet: :raw or packet: 0 we can specify the number of bytes to read.
+When we specify 0 we ask for "the whole buffer". 
+
+
+
+Digging into the erlang source, we find this is done by querying the c buffer struct
+for size and demanding this number of bytes. 
+
+However at the high level we do not have a method of reliably determining the buffer size granted. (Apart from finding at what point recv(socket,0,timeout) maxes out which is what the test "true buffer sizes" in `echo_server_test.exs` does)
+
+read man tcp and https://erlang.org/pipermail/erlang-questions/2011-August/060851.html
+
+This is a graph of `div(:inet.getopts(s,[:recbuf]),2)` (gray) 
+and `byte_size(:gen_tcp.recv(s,0,10_000))` vs requested buffer size as output by the test
+above.
+
+![buffersizes](./img/bufferSizeReportedVsActual2.png)
+
+`cat /proc/sys/net/core/rmem_max` gives 212992
+
+So for low values the reported value is twice the requested (and delivered) value.
+Above around 64k the delivered value increases in steps, while the reported value 
+tracks the requested value. Above rmem_max the delivered value maxes out at around 110% of
+the reported maximum.
+
+The real concern here is that there are three regions where the delivered value is less that the reported value. 
+
+n.b. sndbuf and recbuf are the os buffers. buffer is the user buffer. If the user buffer is
+big enough and we explictly request a number of bytes from recv there is no problem. 
+
+The above is just a feature of recv(socket,0,timeout)
+
 ## Some shell stuff
 
 `sed '/pattern1/s/pattern2/replacement/g'` replaces all occurrences of `pattern2` with `replacement` on lines matching `pattern1`
@@ -216,9 +250,10 @@ Of course, this way you have to spend \$25...
 ## fly.io assign and release private ip addresses
 
 ``` sh
-$ fly ips help
-$ fly ips allocate-v4
-$ fly ips release 37.16.27.35 -a protohackers-in-elixir-sja
+fly ips help
+fly ips allocate-v4
+fly ips release 37.16.27.35 -a protohackers-in-elixir-sja
+fly ips list
 ```
 
 ## (doom) emacs stuff
@@ -235,9 +270,9 @@ https://github.com/elixir-editors/emacs-elixir/issues/488
 ## Stop bluetooth audio static
 
 ``` sh
-$ sudo apt install --reinstall pulseaudio pulseaudio-module-bluetooth
-$ sudo apt-get install pavucontrol
-$ pavucontrol
+sudo apt install --reinstall pulseaudio pulseaudio-module-bluetooth
+sudo apt-get install pavucontrol
+pavucontrol
 ```
 Toggle between LDAC (High Quality) and aptX HD and back, sorted me out.
 (maybe stick with aptX HD...)
