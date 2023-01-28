@@ -194,6 +194,7 @@ above.
 ![buffersizes](./img/bufferSizeReportedVsActual2.png)
 
 `cat /proc/sys/net/core/rmem_max` gives 212992
+`cat /proc/sys/net/core/wmem_max` gives 212992
 
 So for low values the reported value is twice the requested (and delivered) value.
 Above around 64k the delivered value increases in steps, while the reported value 
@@ -255,6 +256,31 @@ fly ips allocate-v4
 fly ips release 37.16.27.35 -a protohackers-in-elixir-sja
 fly ips list
 ```
+
+## Rustler erlang nifs in rust very easy.
+
+https://github.com/rusterlium/rustler
+
+Add rustler to deps
+``` elixir
+#./mix.exs
+  defp deps do
+    [
+      {:rustler, "~> 0.27.0"},
+    ]
+```
+
+``` sh
+mix rustler.new
+```
+Respond with `Protohackers.HelloRust` and then default.
+
+Now, following the instructions in Rustler's README.md edit `./lib/protohackers/hello_rust.ex`
+to 'declare' the elixir functions you define in `./native/protohackers_hellorust/src/lib.rs`
+
+You can find an example `lib.rs` at https://github.com/rusterlium/NifIo/blob/master/native/io/src/lib.rs
+
+https://www.doctave.com/blog/2021/08/19/using-rust-with-elixir-for-code-reuse-and-performance.html
 
 ## (doom) emacs stuff
 

@@ -1,5 +1,5 @@
 defmodule Protohackers.EchoServerTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   use Protohackers.Constants
   require Logger
 
@@ -82,11 +82,10 @@ defmodule Protohackers.EchoServerTest do
     file = File.open!('recbuf.csv',[:write,:utf8])
     for buffer_size <- 1024..612992//100 do
       port_options = [
-      # inet_backend: :inet,
       mode: :binary,
-      active: false,       #everything is blocking and explicit
+      active: false,
       reuseaddr: true,
-      exit_on_close: false, #so we can keep writing on socket when client closes
+      exit_on_close: false,
       packet: :raw,
       sndbuf: buffer_size,  # max from /proc/sys/net/core/wmem_max = 212992
       recbuf: buffer_size,  # max from /proc/sys/net/core/rmem_max = 212992

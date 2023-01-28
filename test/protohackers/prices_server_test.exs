@@ -1,5 +1,5 @@
 defmodule Protohackers.PricesServer.Test do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   use Protohackers.Constants
 
   # alias Protohackers.PricesServer.DB
