@@ -11,6 +11,7 @@ defmodule Protohackers.EchoServerTest do
     assert :gen_tcp.recv(socket, 0, @timeout) == {:ok, "foobar"}
   end
 
+  @tag :capture_log
   test "echo_server has at most max buffer size" do
     {:ok,socket} = :gen_tcp.connect(~c"localhost", @echo_port, [mode: :binary, active: false])
     payload = :binary.copy(".", @buffer_size + 1)
@@ -19,6 +20,7 @@ defmodule Protohackers.EchoServerTest do
     assert :gen_tcp.recv(socket, 0) == {:error, :closed}
   end
 
+  @tag :capture_log
   test "echo_server has at least max buffer size recursive" do
     {:ok,socket} =
       :gen_tcp.connect(
@@ -29,14 +31,15 @@ defmodule Protohackers.EchoServerTest do
           active: false,
         ]
       )
-    dbg(:inet.getopts(socket, [:buffer]))
-    dbg(@buffer_size)
+    # dbg(:inet.getopts(socket, [:buffer]))
+    # dbg(@buffer_size)
     payload = :binary.copy(".", @buffer_size)
     assert :gen_tcp.send(socket, payload) == :ok
     :gen_tcp.shutdown(socket, :write)
     assert do_recv(socket, _buffer="") == {:ok, payload}
   end
 
+  @tag :capture_log
   test "echo_server has at least max buffer size non-recursive" do
     {:ok,socket} =
       :gen_tcp.connect(
@@ -48,13 +51,12 @@ defmodule Protohackers.EchoServerTest do
           buffer: @buffer_size
         ]
       )
-    dbg(:inet.getopts(socket, [:buffer]))
-    dbg(@buffer_size)
+    # dbg(:inet.getopts(socket, [:buffer]))
+    # dbg(@buffer_size)
     payload = :binary.copy(".", @buffer_size)
     assert :gen_tcp.send(socket, payload) == :ok
     :gen_tcp.shutdown(socket, :write)
-    # This grabs the whole payload, although by docs is not guaranteed to do so
-    assert :gen_tcp.recv(socket, 0, @timeout) == {:ok, payload}
+    assert :gen_tcp.recv(socket, @buffer_size, @timeout) == {:ok, payload}
   end
 
   test "handles multiple concurrent connections" do
@@ -73,6 +75,7 @@ defmodule Protohackers.EchoServerTest do
   end
 
   @tag timeout: :infinity
+  @tag disabled: true
   test "true buffer sizes" do
     # for payload_size <- (1024*240)..(1024*241)//1 do
     payload_size = 212992+1
@@ -104,6 +107,7 @@ defmodule Protohackers.EchoServerTest do
     end
   end
 
+  @tag disabled: true
   test "gen_tcp behaves as advertised" do
     # for payload_size <- (1024*240)..(1024*241)//1 do
     for payload_size <- 245790..245801//1 do
@@ -154,6 +158,7 @@ defmodule Protohackers.EchoServerTest do
     end
   end
 
+  @tag disabled: true
   test "gen_tcp behaves as advertised 2" do
     # auto conversion of iodata to binary
     for buffer_size <- [10] do

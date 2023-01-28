@@ -12,6 +12,6 @@ if config_env() == :dev do
 end
 
 if config_env() == :test do
-  config :logger, level: :debug
+  config :logger, level: :warn
   set_my_console_logger.()
 end

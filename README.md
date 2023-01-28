@@ -63,6 +63,72 @@ iex(foo@localhost)1> Logger.configure(level: :info)
 iex(foo@localhost)1> Logger.configure(level: :debug)
 :ok
 ```
+## Anonymous functions in elixir pipelines.
+
+TLDR; 
+
+``` elixir
+# either 
+
+|> (&(2*&1)).()
+
+# or
+
+|> (fn x -> 2*x end).()
+
+# or from Elixir 1.12
+
+|> then(&(2*&1))
+
+# or
+
+|> then(fn x -> 2* x end)
+```
+
+https://stackoverflow.com/questions/24593967/how-to-pass-an-anonymous-function-to-the-pipe-in-elixir
+
+## Control which mix tests are run 
+
+There are 5 ways to run only specific tests with Elixir
+
+run a single file with `mix test path_to_your_tests/your_test_file.exs`
+This will run all test defined in `your_test_file.exs`
+
+run a specific test from a specific test file by adding a colon and the line number of that test
+for example `mix test path_to_your_tests/your_test_file.exs:12` will run the test at line 12 of `your_test_file.exs`
+
+define a tag to exclude on your test methods
+
+``` elixir
+defmodule MyTests do
+    @tag disabled: true
+    test "some test" do
+        #testtesttest
+    end
+end
+```
+on the command line execute your tests like this
+`mix test --exclude disabled`
+
+define a tag to include on your test methods
+
+``` elixir
+defmodule MyTests do
+    @tag mustexec: true
+    test "some test" do
+        #testtesttest
+    end
+end
+```
+on the command line execute your tests like this
+`mix test --only mustexec`
+
+Generally exclude some tagged tests by adding this to your `test/test_helper.exs` file
+`ExUnit.configure exclude: [disabled: true]`
+
+Warning: Mix has an --include directive. This directive is NOT the same as the --only directive. Include is used to break the general configuration (exclusion) from the test/test_helper.exs file described under 4).
+
+https://stackoverflow.com/questions/26150146/how-can-i-make-mix-run-only-specific-tests-from-my-suite-of-test
 
 ## Elixir dbg
 

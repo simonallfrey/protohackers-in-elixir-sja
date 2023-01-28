@@ -2,7 +2,7 @@ defmodule Protohackers.PricesServer.Test do
   use ExUnit.Case
   use Protohackers.Constants
 
-  alias Protohackers.PricesServer.DB
+  # alias Protohackers.PricesServer.DB
 
   test "handles queries" do
     port_opts = [
