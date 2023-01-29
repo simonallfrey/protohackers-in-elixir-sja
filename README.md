@@ -1,5 +1,50 @@
 # Protohackers in Elixir
 
+
+## Day 3
+
+Rather than a blocking Actor, use Erlang Term Storage, ETS table for state of
+chat server. ETS tables are an efficient in-memory database included with the
+Erlang virtual machine. It sits in a part of the virtual machine where
+destructive updates are allowed and where garbage collection dares not approach
+
+https://learnyousomeerlang.com/ets#the-concepts-of-ets
+
+Example of `:ets.match` (in eralng)
+``` erlang
+1> ets:new(table, [named_table, bag]).
+table
+2> ets:insert(table, [{items, a, b, c, d}, {items, a, b, c, a}, {cat, brown, soft, loveable, selfish}, {friends, [jenn,jeff,etc]}, {items, 1, 2, 3, 1}]).
+true
+3> ets:match(table, {items, '$1', '$2', '_', '$1'}).
+[[a,b],[1,2]]
+4> ets:match(table, {items, '$114', '$212', '_', '$6'}).
+[[d,a,b],[a,a,b],[1,1,2]]
+5> ets:match_object(table, {items, '$1', '$2', '_', '$1'}).
+[{items,a,b,c,a},{items,1,2,3,1}]
+6> ets:delete(table).
+true
+```
+
+
+https://stackoverflow.com/questions/29505161/erlang-ets-select-and-match-performance
+
+
+Use telnet to interact with a line packet server:
+``` sh
+$ telnet localhost 5004
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+What's your username?
+Simon
+
+```
+Use 'Ctrl-d' to quit.
+
+
+## Day 2
+
 ## Day 1
 This is the second video of my "Protohackers" Elixir series. We're solving network challenges from https://protohackers.com.
 
@@ -39,6 +84,23 @@ echo foo | nc -N localhost 7001
 #    -N      shutdown(2) the network socket after EOF on the input.  Some servers require this to finish their work.
 ```
 https://serverfault.com/questions/512722/how-to-automatically-close-netcat-connection-after-data-is-sent
+
+## IEx show charlists as lists
+
+``` elixir
+[101, 102, 103, 104] == 'efgh'
+#=> true
+
+[101, 102, 103, 104] |> inspect(charlists: :as_lists)
+#=> [101, 102, 103, 104]
+#You can also configure IEx to always print charlists as lists:
+
+IEx.configure(inspect: [charlists: :as_lists])
+IEx.configure(inspect: [charlists: :as_charlists])
+IEx.configure(inspect: [charlists: :infer])
+```
+
+https://stackoverflow.com/questions/40324929/integer-list-printed-as-string-in-elixir
 
 ## Sharing constants with module attributes.
 
@@ -266,7 +328,77 @@ fly ips release 37.16.27.35 -a protohackers-in-elixir-sja
 fly ips list
 ```
 
+## Genserver child_spec/1
+
+Elixir 1.5 GenServer introduces overridable child_spec/1. Now instead of, in your application supervisor, calling;
+
+``` elixir
+# MyExample.Application
+def start(_type, _args) do
+  children = [
+    worker(MyExample.MyChild, [], restart: :permanent, shutdown: 5000)
+  ]
+end
+```
+You can now let the child decide how its supposed to be implemented by overriding child_spec/1 in the child.
+``` elixir
+#MyExample.Application
+def start(_type, _args) do
+  children = [ 
+    MyExample.MyChild
+   ]
+end
+
+# MyExample.MyChild
+def child_spec(_args) do
+  %{
+    id: __Module__,
+    start: { __Module__, :start_link, []},
+    restart: :permanent,
+    shutdown: 5000,
+    type: :worker
+   }
+end
+```
+You can view the defaults that child_spec/1 implements in the source code.  https://github.com/elixir-lang/elixir/blob/v1.14/lib/elixir/lib/gen_server.ex#L762
+
+Arguments can be passed to child_spec/1 which can then be used for pattern matching and custom configurations based on the supervisor accessing it:
+
+``` elixir
+#MyExample.Application
+def start(_type, _args) do
+  children = [ 
+    {MyExample.MyChild, "temporary"}
+   ]
+end
+
+# MyExample.MyChild
+def child_spec("temporary") do
+  %{
+    id: __Module__,
+    start: { __Module__, :start_link, []},
+    restart: :temporary,
+    shutdown: 5000,
+    type: :worker
+   }
+end
+
+def child_spec(_) do
+  %{
+    id: __Module__,
+    start: { __Module__, :start_link, []},
+    restart: :permanent,
+    shutdown: 5000,
+    type: :worker
+   }
+end
+```
+
+
 ## Rustler erlang nifs in rust very easy.
+
+IMPORTANT: for deployment on fly.io rename hello_rust.ex to hello_rust.ex.bak
+(we'll figure it out properly later.)
 
 https://github.com/rusterlium/rustler
 

@@ -38,8 +38,8 @@ defmodule Protohackers.PrimeServer do
         # dbg(:inet.getopts(listen_socket, [:buffer]))
         #  [lib/protohackers/prime_server.ex:32: Protohackers.PrimeServer.init/1]
         #  :inet.getopts(listen_socket, [:buffer]) #=> {:ok, [buffer: 1460]}
-        Logger.info("Running on #{node()}")
-        Logger.info("PID #{inspect(self())}")
+        # Logger.info("Running on #{node()}")
+        # Logger.info("PID #{inspect(self())}")
         Logger.info("Starting prime server on port #{@prime_port}")
         state = %__MODULE__{listen_socket: listen_socket, supervisor: supervisor}
         {:ok, state, {:continue, :accept}}
