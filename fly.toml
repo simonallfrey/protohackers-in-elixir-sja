@@ -8,6 +8,7 @@ processes = []
 [env]
 
 [experimental]
+allowed_public_ports = []
 auto_rollback = true
 
 [[services]]
@@ -47,17 +48,17 @@ port = 5004
 
 [[services]]
 internal_port = 5005
-protocol = "tcp"
+protocol = "udp"
 
 [[services.ports]]
 handlers = []
 port = 5005
 
-[[services.tcp_checks]]
-grace_period = "1s"
-interval = "15s"
-restart_limit = 0
-timeout = "2s"
+# [[services.tcp_checks]]
+# grace_period = "1s"
+# interval = "15s"
+# restart_limit = 0
+# timeout = "2s"
 
 [services.concurrency]
 hard_limit = 25
